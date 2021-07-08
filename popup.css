@@ -1,0 +1,161 @@
+body {
+  width: 200px;
+  margin: 0;
+  font-family: 'Encode Sans SC', sans-serif;
+}
+
+.content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.orange-bg {
+  background: #fa713b;
+  /* fallback for old browsers */
+  background: -webkit-linear-gradient(to bottom, #fa713b, #f17a3e);
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to bottom, #fa713b, #f17a3e);
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+.content .header {
+  height: 140px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  box-shadow: 0 7px 30px -10px rgba(150, 170, 180, 0.5);
+  color: #fff;
+}
+
+.content .body {
+  height: 40%;
+  background: transparent;
+  padding: 0 16px 16px;
+  color: #262626;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 200;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.title>i {
+  transform: scale(0.7);
+  margin: 0 6px;
+}
+
+.title-sm {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 10px 0;
+}
+
+.currency-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.separator {
+  width: 1px;
+  background: #fff;
+}
+
+.currency {
+  width: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.currency-title {
+  font-size: 12px;
+  opacity: .9;
+  font-weight: 500;
+}
+
+.currency-value {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.amount {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.amount input {
+  text-align: right;
+  max-width: 100px;
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-content: space-between;
+}
+
+.loader-wrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: none;
+  pointer-events: none;
+}
+
+.loader-wrapper.disabled {
+  transition: all 300ms ease-in-out;
+  opacity: 0;
+}
+
+/* Icons from css.gg */
+.gg-arrow-right-o {
+  box-sizing: border-box;
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid;
+  transform: scale(var(--ggs, 1));
+  border-radius: 20px
+}
+
+.gg-arrow-right-o::after, .gg-arrow-right-o::before {
+  content: "";
+  display: block;
+  box-sizing: border-box;
+  position: absolute;
+  right: 4px
+}
+
+.gg-arrow-right-o::after {
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+  transform: rotate(45deg);
+  bottom: 6px
+}
+
+.gg-arrow-right-o::before {
+  width: 10px;
+  height: 2px;
+  bottom: 8px;
+  background: currentColor
+}
