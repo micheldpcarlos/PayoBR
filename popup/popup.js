@@ -40,10 +40,10 @@ async function getMonetaryData() {
     {
       cache: "reload",
     }
-  ).then((response) => {
+  ).then(async (response) => {
     syncButton.classList.remove("loading");
-    response.json().then((data) => {
-      bidValue = parseFloat(data.USDBRL.bid);
+    await response.json().then(async (data) => {
+      bidValue = await parseFloat(data.USDBRL.bid);
 
       UIsetDollarValue();
       UIsetPayoneerValue();
