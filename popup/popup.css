@@ -125,6 +125,7 @@ input::-webkit-inner-spin-button {
   opacity: 0;
 }
 
+
 /* Icons from css.gg */
 
 /* Arrow Right Icon */
@@ -207,4 +208,21 @@ input::-webkit-inner-spin-button {
 }
 .gg-sync:hover:not(:active) {
   transform: scale(0.7);
+}
+
+
+.gg-sync.loading {
+  animation-name: spin;
+  animation-duration: 5000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes spin {
+  from {
+    transform: scale(0.6) rotate(0deg);
+  }
+  to {
+    transform: scale(0.6) rotate(-360deg);
+  }
 }

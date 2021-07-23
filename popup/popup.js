@@ -33,12 +33,15 @@ function UIsetSimulation() {
 }
 
 async function getMonetaryData() {
+  const syncButton = document.querySelector(".gg-sync");
+  syncButton.classList.add("loading");
   await fetch(
     "https://economia.awesomeapi.com.br/last/USD-BRL?ts=" + Date.now(),
     {
       cache: "reload",
     }
-  ).then((response) =>
+  ).then((response) => {
+    syncButton.classList.remove("loading");
     response.json().then((data) => {
       bidValue = parseFloat(data.USDBRL.bid);
 
@@ -47,8 +50,8 @@ async function getMonetaryData() {
 
       // Update bid value on bg script
       BG_PORT.postMessage(bidValue);
-    })
-  );
+    });
+  });
 }
 
 document.addEventListener(
@@ -57,17 +60,17 @@ document.addEventListener(
     getMonetaryData().then(() => {
       UIsetSimulation();
     });
+
     // Sync Button Click
     const syncButton = document.querySelector(".gg-sync");
-
     syncButton.addEventListener("click", function (event) {
       getMonetaryData().then(() => {
         UIsetSimulation();
       });
     });
 
+    // Input update events
     const inputEl = document.querySelector("input");
-
     inputEl.addEventListener("keypress", function (event) {
       const regex = new RegExp("^[0-9]+$");
       const isNumber = regex.test(event.key);
