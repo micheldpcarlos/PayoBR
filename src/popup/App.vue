@@ -19,7 +19,20 @@
       <h1 class="title title-sm">SIMULATE</h1>
       <div class="amount">
         <label for="input" class="amount-input-label">Amount:</label>
-        <input type="number" id="input" class="amount-input" value="50" />
+
+        <!-- <input
+          type="number"
+          id="input"
+          class="amount-input"
+          v-model="simulationValue"
+          @keypress="onNumberKeyPress"
+        /> -->
+        <Money
+          v-model="simulationValue"
+          v-bind="brl_money"
+          class="form-input input-lg"
+          @input="debouncedGetMonetaryData"
+        />
       </div>
       <div class="result">
         <label for="input" class="amount-input-label">Result:</label>
@@ -30,116 +43,102 @@
 </template>
 
 <script>
+import axios from "axios";
+import { debounce } from "lodash";
+import { Money } from "v-money";
+
 export default {
   name: "App",
-};
-
-let bidValue = 0;
-let simulationValue = 50;
-
-// Create port for comunication with bg script
-const BG_PORT = chrome.extension.connect({
-  name: "BID_BG_CONNECTION",
-});
-
-function formatNumber(number) {
-  // Payoneer is rounding down it's last decimal (STRONKS)
-  return Math.floor(number * 10000) / 10000;
-}
-
-function UIsetDollarValue() {
-  const dollarEl = document.getElementById("dollar");
-  dollarEl.innerHTML = formatNumber(bidValue);
-}
-
-function UIsetPayoneerValue() {
-  const pDollarEl = document.getElementById("p-dollar");
-  pDollarEl.innerHTML = formatNumber(bidValue * 0.98);
-}
-
-function UIsetSimulation() {
-  const pDollarValue = formatNumber(bidValue * 0.98);
-  const realValue = pDollarValue * simulationValue;
-
-  const resultEl = document.getElementById("result");
-  resultEl.innerHTML = realValue.toLocaleString("pt-br", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-async function getMonetaryData() {
-  const syncButton = document.querySelector(".gg-sync");
-  syncButton.classList.add("loading");
-  await fetch(
-    "https://economia.awesomeapi.com.br/last/USD-BRL?ts=" + Date.now(),
-    {
-      cache: "reload",
-    }
-  ).then(async (response) => {
-    syncButton.classList.remove("loading");
-    await response.json().then(async (data) => {
-      bidValue = await parseFloat(data.USDBRL.bid);
-
-      UIsetDollarValue();
-      UIsetPayoneerValue();
-
-      // Update bid value on bg script
-      BG_PORT.postMessage(bidValue);
-    });
-  });
-}
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
-    getMonetaryData().then(() => {
-      UIsetSimulation();
-    });
-
-    // Sync Button Click
-    const syncButton = document.querySelector(".gg-sync");
-    syncButton.addEventListener("click", function () {
-      getMonetaryData().then(() => {
-        UIsetSimulation();
+  components: { Money },
+  data() {
+    return {
+      currencyData: null,
+      simulationValue: 50,
+      simulationResult: 0,
+      bgPort: null,
+      brl_money: {
+        decimal: ",",
+        thousands: ".",
+        prefix: "R$ ",
+        precision: 2,
+        masked: false,
+      },
+      usd_money: {
+        decimal: ".",
+        thousands: ",",
+        prefix: "$ ",
+        precision: 2,
+        masked: false,
+      },
+    };
+  },
+  mounted() {
+    // Add listener to background bid update
+    // this.bgPort.onMessage.addListener(function (value) {
+    //   bidValue = value;
+    // });
+    this.getMonetaryData();
+  },
+  methods: {
+    formatNumber(number) {
+      // Payoneer is rounding down it's last decimal (STRONKS)
+      return Math.floor(number * 10000) / 10000;
+    },
+    startBgPort() {
+      // Create port for comunication with bg script
+      this.bgPort = chrome.extension.connect({
+        name: "BID_BG_CONNECTION",
       });
-    });
+    },
+    getBRLFormatted(number) {
+      return number.toLocaleString("pt-br", {
+        style: "currency",
+        currency: "BRL",
+      });
+    },
+    async getMonetaryData() {
+      alert("vo pega");
+      const url =
+        "https://economia.awesomeapi.com.br/last/USD-BRL?ts=" + Date.now();
 
-    // Input update events
-    const inputEl = document.querySelector("input");
-    inputEl.addEventListener("keypress", function (event) {
+      const response = await axios.get(url, {
+        headers: {
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
+
+      if (response.status === 200 && response.data.USDBRL) {
+        this.currencyData = {
+          ...response.data.USDBRL,
+          ask: parseFloat(response.data.USDBRL.ask),
+          bid: parseFloat(response.data.USDBRL.bid),
+        };
+      }
+
+      // Set extension badge value
+      const decimalLimitedValue = this.currencyData.bid.toFixed(2);
+      chrome.browserAction.setBadgeText({ text: "" + decimalLimitedValue });
+    },
+    debouncedGetMonetaryData: debounce(async function () {
+      await this.getMonetaryData();
+    }, 500),
+    onNumberKeyPress(event) {
       const regex = new RegExp("^[0-9]+$");
       const isNumber = regex.test(event.key);
 
+      console.log("isNumber", isNumber);
+
       if (!isNumber) event.preventDefault();
-    });
-
-    let timer = null;
-    inputEl.addEventListener("input", function (event) {
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        getMonetaryData().then(() => {
-          simulationValue = event.target.value;
-          UIsetSimulation();
-        });
-      }, 500);
-    });
-
-    // Add listener to background bid update
-    BG_PORT.onMessage.addListener(function (value) {
-      bidValue = value;
-      UIsetDollarValue();
-      UIsetPayoneerValue();
-    });
+    },
   },
-  false
-);
+};
 </script>
 
 <style>
-html {
-  width: 400px;
-  height: 300px;
+body {
+  margin: 0;
 }
 
 .content {
