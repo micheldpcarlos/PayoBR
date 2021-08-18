@@ -1,6 +1,10 @@
 // port placeholder
 let c_port = null;
 
+// store interval
+// eslint-disable-next-line no-unused-vars
+let getInterval = null;
+
 // interval to get new values, 31s to avoid 30s cache imposed in this free api
 const GET_INTERVAL_MS = 31000;
 
@@ -42,10 +46,32 @@ chrome.extension.onConnect.addListener(function (port) {
   });
 });
 
-// First get
-getMonetaryData();
-
-// Interval loop
-setInterval(() => {
+// on Installed first run
+chrome.runtime.onInstalled.addListener(() => {
+  // First get
   getMonetaryData();
-}, GET_INTERVAL_MS);
+
+  // Interval loop
+  getInterval = setInterval(() => {
+    try {
+      getMonetaryData();
+    } catch (error) {
+      console.log(error);
+    }
+  }, GET_INTERVAL_MS);
+});
+
+// Add startup listener
+chrome.runtime.onStartup.addListener(() => {
+  // First get
+  getMonetaryData();
+
+  // Interval loop
+  getInterval = setInterval(() => {
+    try {
+      getMonetaryData();
+    } catch (error) {
+      console.log(error);
+    }
+  }, GET_INTERVAL_MS);
+});
