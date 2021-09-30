@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "PayoBR",
   "description": "A Vue Browser Extension",
-  "permissions": ["<all_urls>", "*://*/*"],
+  "permissions": ["https://economia.awesomeapi.com.br/*"],
   "icons": {
     "16": "assets/icon.png",
     "48": "assets/icon.png",
