@@ -5,7 +5,7 @@ let c_port = null;
 // eslint-disable-next-line no-unused-vars
 let getInterval = null;
 
-// interval to get new values, 31s to avoid 30s cache imposed in this free api
+// interval to get new values, 31s to avoid 30s cache imposed by this free api
 const GET_INTERVAL_MS = 31000;
 
 function setBidTagValue(bidValue) {
@@ -24,8 +24,8 @@ async function getMonetaryData() {
       const bidValue = parseFloat(data.USDBRL.bid);
       setBidTagValue(bidValue);
 
-      // Update bid value on popup script
-      c_port && c_port.postMessage(bidValue);
+      // Update data on popup script
+      c_port && c_port.postMessage(data.USDBRL);
     })
   );
 }

@@ -1,42 +1,49 @@
 <template>
   <div class="content">
-    <i class="gg-sync"></i>
+    <i
+      class="gg-sync"
+      :class="{ loading }"
+      @click="debouncedGetMonetaryData"
+    ></i>
     <div class="header orange-bg">
-      <h1 class="title">USD <i class="gg-arrow-right-o"></i> BRL</h1>
+      <h1 class="title">
+        <span>USD</span>
+        <i class="gg-arrow-right-o" />
+        <span>BRL</span>
+      </h1>
       <div class="currency-wrapper">
         <div class="currency">
           <div class="currency-title">DOLLAR</div>
-          <div class="currency-value" id="dollar">0.0000</div>
+          <div class="currency-value">
+            {{ currentFormatedDollar }}
+          </div>
         </div>
         <div class="separator"></div>
         <div class="currency">
           <div class="currency-title">PAYONEER</div>
-          <div class="currency-value" id="p-dollar">0.0000</div>
+          <div class="currency-value">
+            {{ currentPayoneerDollar }}
+          </div>
         </div>
       </div>
     </div>
     <div class="body">
-      <h1 class="title title-sm">SIMULATE</h1>
+      <h1 class="title title-sm">SIMULATION</h1>
       <div class="amount">
-        <label for="input" class="amount-input-label">Amount:</label>
-
-        <!-- <input
-          type="number"
-          id="input"
-          class="amount-input"
-          v-model="simulationValue"
-          @keypress="onNumberKeyPress"
-        /> -->
         <Money
-          v-model="simulationValue"
-          v-bind="brl_money"
+          v-bind="usd_money"
           class="form-input input-lg"
-          @input="debouncedGetMonetaryData"
+          :value="simulationValue"
+          @input="debouncedGetMonetaryData($event, 'simulation_value')"
         />
       </div>
       <div class="result">
-        <label for="input" class="amount-input-label">Result:</label>
-        <span class="result-value" id="result"></span>
+        <Money
+          v-bind="brl_money"
+          class="form-input input-lg"
+          :value="simulationResult"
+          @input="debouncedGetMonetaryData($event, 'simulation_result')"
+        />
       </div>
     </div>
   </div>
@@ -70,18 +77,27 @@ export default {
         precision: 2,
         masked: false,
       },
+      loading: true,
     };
   },
   mounted() {
     // Add listener to background bid update
-    // this.bgPort.onMessage.addListener(function (value) {
-    //   bidValue = value;
-    // });
+    this.startBgPort();
     this.getMonetaryData();
+  },
+  computed: {
+    currentFormatedDollar() {
+      return this.currencyData && this.currencyData.bid;
+    },
+    currentPayoneerDollar() {
+      return (
+        this.currencyData && this.formatNumber(this.currencyData.bid * 0.98)
+      );
+    },
   },
   methods: {
     formatNumber(number) {
-      // Payoneer is rounding down it's last decimal (STRONKS)
+      // Payoneer is rounding down it's last decimal
       return Math.floor(number * 10000) / 10000;
     },
     startBgPort() {
@@ -89,14 +105,14 @@ export default {
       this.bgPort = chrome.extension.connect({
         name: "BID_BG_CONNECTION",
       });
-    },
-    getBRLFormatted(number) {
-      return number.toLocaleString("pt-br", {
-        style: "currency",
-        currency: "BRL",
+
+      // On receive data from bg script
+      this.bgPort.onMessage.addListener(function (data) {
+        this.currencyData = data;
       });
     },
     async getMonetaryData() {
+      this.loading = true;
       const url =
         "https://economia.awesomeapi.com.br/last/USD-BRL?ts=" + Date.now();
 
@@ -107,6 +123,8 @@ export default {
           Expires: "0",
         },
       });
+
+      this.loading = false;
 
       if (response.status === 200 && response.data.USDBRL) {
         this.currencyData = {
@@ -119,18 +137,26 @@ export default {
       // Set extension badge value
       const decimalLimitedValue = this.currencyData.bid.toFixed(2);
       chrome.browserAction.setBadgeText({ text: "" + decimalLimitedValue });
+
+      // Aways update the result on update the currencyData
+      this.simulationResult = this.currentPayoneerDollar * this.simulationValue;
     },
-    debouncedGetMonetaryData: debounce(async function () {
-      await this.getMonetaryData();
+    // Dynamically get monetary data
+    debouncedGetMonetaryData: debounce(async function (value, type) {
+      if (!type) {
+        await this.getMonetaryData();
+      } else if (type == "simulation_value" && value != this.simulationValue) {
+        this.simulationValue = value;
+        await this.getMonetaryData();
+      } else if (
+        type == "simulation_result" &&
+        value != this.simulationResult
+      ) {
+        this.simulationResult = value;
+        await this.getMonetaryData();
+        this.simulationValue = value / this.currentPayoneerDollar;
+      }
     }, 500),
-    onNumberKeyPress(event) {
-      const regex = new RegExp("^[0-9]+$");
-      const isNumber = regex.test(event.key);
-
-      console.log("isNumber", isNumber);
-
-      if (!isNumber) event.preventDefault();
-    },
   },
 };
 </script>
@@ -157,7 +183,7 @@ body {
 }
 
 .content .header {
-  height: 140px;
+  height: 110px;
   border-bottom-left-radius: 8px;
   border-bottom-right-radius: 8px;
   box-shadow: 0 7px 30px -10px rgba(150, 170, 180, 0.5);
@@ -185,6 +211,10 @@ body {
   margin: 0 6px;
 }
 
+.title > span {
+  width: 40px;
+}
+
 .title-sm {
   font-size: 14px;
   font-weight: 500;
@@ -194,7 +224,7 @@ body {
 .currency-wrapper {
   display: flex;
   justify-content: center;
-  margin-top: 32px;
+  margin-top: 20px;
 }
 
 .separator {
@@ -235,7 +265,6 @@ input::-webkit-inner-spin-button {
 
 .amount input {
   text-align: right;
-  max-width: 100px;
 }
 
 .result {
@@ -243,6 +272,10 @@ input::-webkit-inner-spin-button {
   align-items: center;
   justify-content: center;
   justify-content: space-between;
+}
+
+.result input {
+  text-align: right;
 }
 
 .loader-wrapper {

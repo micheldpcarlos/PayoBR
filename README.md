@@ -4,10 +4,13 @@ Chrome extension that shows the current USD to BRL rate, calculate Payoneer exch
 
 ## Installation
 
-It is possible to clone this repo and import it unpacked in your chrome browser.
 
-Soon, if possible, it will be released in google store for direct instalation
+Google Store Link:
+https://chrome.google.com/webstore/detail/payobr/aenlicamdmoofbebbmnnhdefpknfkkpd
 
+
+
+It is possible to clone this repo and import the dist unpacked in your chrome browser.
 
 ## Usage
 Just click the extension icon and it will open a popup with the information.
