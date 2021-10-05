@@ -111,7 +111,7 @@ export default {
         this.currencyData = data;
       });
     },
-    async getMonetaryData() {
+    async getMonetaryData(updateSimulationResult = true) {
       this.loading = true;
       const url =
         "https://economia.awesomeapi.com.br/last/USD-BRL?ts=" + Date.now();
@@ -138,8 +138,11 @@ export default {
       const decimalLimitedValue = this.currencyData.bid.toFixed(2);
       chrome.browserAction.setBadgeText({ text: "" + decimalLimitedValue });
 
-      // Aways update the result on update the currencyData
-      this.simulationResult = this.currentPayoneerDollar * this.simulationValue;
+      // update the currencyData if needed
+      if (updateSimulationResult) {
+        this.simulationResult =
+          this.currentPayoneerDollar * this.simulationValue;
+      }
     },
     // Dynamically get monetary data
     debouncedGetMonetaryData: debounce(async function (value, type) {
@@ -153,7 +156,7 @@ export default {
         value != this.simulationResult
       ) {
         this.simulationResult = value;
-        await this.getMonetaryData();
+        await this.getMonetaryData(false);
         this.simulationValue = value / this.currentPayoneerDollar;
       }
     }, 500),
